@@ -76,17 +76,28 @@ function takeTurn(column , isTurn){ //takes the turn of the player, takes the co
               break;
           }
       }
+      checkWin(gameState);
+      checkDraw(gameState);
   }else{
       console.log("Not your turn");
       return;
   }
 }
 
-function checkWin(){ //checks if the player has won
+function checkWin(gameState){ //checks if the player has won
 }
 
-function checkDraw(){ //checks if the game is a draw    
+function checkDraw(gameState){ //checks if the game is a draw    
 }
 
 function resetGame(){ //resets the game
+    gameState = [   [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0],
+                    [0, 0, 0, 0, 0, 0]
+                  ];
+    drawUpdate(gameState); 
 }
