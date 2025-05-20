@@ -86,7 +86,7 @@ function drawUpdate(gameState){ //draws the game state
   drawUpdate(gameState);  
 }
 function takeTurn(column , isTurn){ //takes the turn of the player, takes the column as input
-    //checkf if column is full
+    //check if column is full
     //places peice to the lowest available row
     //check for win
     //check for draw
