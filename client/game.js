@@ -114,21 +114,3 @@ function takeTurn(column , isTurn){ //takes the turn of the player, takes the co
       return;
   }
 }
-
-function checkWin(gameState){ //checks if the player has won
-}
-
-function checkDraw(gameState){ //checks if the game is a draw    
-}
-
-function resetGame(){ //resets the game
-    gameState = [   [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0],
-                    [0, 0, 0, 0, 0, 0]
-                  ];
-    drawUpdate(gameState); 
-}
