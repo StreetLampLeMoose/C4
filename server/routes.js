@@ -1,8 +1,17 @@
 const express = require('express');
-const sendGameState = express.Router();
+const router = express.Router();
+const {Game}= require('./classes.js');
 
-sendGameState.get('/game-state', (req, res) => {
+router.get('/game-state', (req, res) => {
     res.json(gameState);
 })
 
-module.exports = sendGameState;
+router.get('/game-class', (req, res) => {
+    const gameClassString = Game.toString();
+    res.type('application/javascript'); // Set the content type to JavaScript
+    res.send(`export default ${gameClassString}`); // Send the class definition as a string
+})
+
+module.exports = router;
+
+// This code defines an Express router for handling game-related routes.

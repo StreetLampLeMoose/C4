@@ -5,10 +5,12 @@ exports.app = app;
 const port = 3000; 
 const path = require('path');
 const { Game } = require('./server/classes.js');
+const routes = require('./server/routes.js');
 
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'client')));
-console.log('Starting server...test');
+
+console.log('Starting server...');
 console.log('Current directory:', __dirname);
 console.log('Static directory:', __dirname);
 
@@ -26,3 +28,5 @@ app.get('/view', (req, res) => {
 app.listen(port, () => {
   console.log(`Server is running at http://localhost:${port}`);
 });
+
+app.use('/', routes);

@@ -1,7 +1,14 @@
 <html>
+    <script type = 'module' src = "./game.js" defer></script>
     <body>
         <p>Connect 4 Game</p>
         <canvas id="gameCanvas" width="700" height="600"></canvas>
+        <text id="status">Waiting for players</text>
+        <input type="text" id="playerName" placeholder="Enter your name">
+        <input type="text" id="gameCode" placeholder="Enter game code">
+        <button id="createGame">Create Game</button>
+        <button id="joinGame">Join Game</button>
+        <text id="errorMessage" style="color: red;"></text>
     </body>
-    <script type = 'module' src = "./game.js"></script>
+    
 </html>
