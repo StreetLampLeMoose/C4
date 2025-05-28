@@ -12,24 +12,24 @@ const numberOfRows = 6;
 const cellWidth = game.width / numberOfColumns;
 const cellHeight = game.height / numberOfRows;
 
-let isTurn = true; //true for player 1, false for player 2
-
 const holeRadius = cellHeight / 2 - 5;
 //will have to change this so the player can choose the color of their peice and the opponent gets the other color
 let playerColor = "#FF0000"; //red
 let opponentColor = "#FFFF00"; //yellow
-//  //playing, win, draw
+
 //will have to change this so one player is player 1 and the other is player 2
 //this will come from a route served by the server
 
 function gameEventListener(gameObj){
-  game.addEventListener("click", (event) => {
+   function clickHandler(event){ //handles the click event on the game canvas
     console.log("Clicked");
     const rect = game.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const column = Math.floor(x / cellWidth);
-    takeTurn(column, isTurn, gameObj);
-  })
+    takeTurn(column, gameObj);
+    game.removeEventListener("click", clickHandler); //remove the event listener after the first click
+  }
+  game.addEventListener("click", clickHandler); //add event listener to the game canvas
 }
 
 createGameButton.addEventListener("click", createGame);
@@ -80,7 +80,6 @@ function createGame(){   //creates a new game
   const currentPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
   const gameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
-  drawUpdate(gameObj.gameState)
   gameEventListener(gameObj);
 }
 
@@ -92,9 +91,9 @@ function joinGame(){ //joins an existing game
   console.log("Joining game...");
   return; //this is a placeholder, will implement later
 } 
-function drawUpdate(gameState){ //draws the game state
-    for(let i = 0; i< gameState.length; i++){
-        for(let j = 0; j< gameState[i].length; j++){
+function drawUpdate(gameObj){ //draws the game state
+    for(let i = 0; i< gameObj.gameState.length; i++){
+        for(let j = 0; j< gameObj.gameState[i].length; j++){
             ctx.beginPath();
             ctx.arc(
                 i * cellWidth + cellWidth / 2,
@@ -103,9 +102,9 @@ function drawUpdate(gameState){ //draws the game state
                 0,
                 Math.PI * 2
             );
-            if(gameState[i][j] == 1){
+            if(gameObj.gameState[i][j] == 1){
                 ctx.fillStyle = playerColor;
-            }else if(gameState[i][j] == 2){
+            }else if(gameObj.gameState[i][j] == 2){
                 ctx.fillStyle = opponentColor;
             }else{
                 ctx.fillStyle = "#fff";
@@ -114,25 +113,18 @@ function drawUpdate(gameState){ //draws the game state
             ctx.closePath();
         }
     }
-  drawUpdate(gameState);  
 }
-function takeTurn(column , isTurn, gameObj){ //takes the turn of the player, takes the column as input
+function takeTurn(column ,  gameObj){ //takes the turn of the player, takes the column as input
     //check if column is full
     //places peice to the lowest available row
     //check for win
     //check for draw
-    //pass control back to server for the other player to take their turn
-  if(isTurn){
-      if(gameObj.gameState[column][0] != 0) {
-          errorMessage.textContent = "Column is full, please choose another column.";
-          return;
-      }
-      for(let i = gameState[column].length; i >= 0 ; i--) {
+   //set turn to false for the next player
+      for(let i = gameObj.gameState[column].length; i >= 0 ; i--) {
           if(gameObj.gameState[column][i] == 0) {
               gameObj.gameState[column][i] = 1; //1 for player 1
               console.log(gameObj.gameState);
-              drawUpdate(gameObj.gameState);
-              //isTurn = false;
+              drawUpdate(gameObj);
               if (gameObj.checkWin()) {
                   console.log("current player wins");
                   return;
@@ -144,10 +136,5 @@ function takeTurn(column , isTurn, gameObj){ //takes the turn of the player, tak
               //send gameState to server, or win/draw message
               break;
           }
-      }
-      
-  }else{
-      console.log("Not your turn");
-      return;
-  }
+      }  
 }
