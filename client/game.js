@@ -5,13 +5,13 @@ const errorMessage = document.getElementById("errorMessage");
 const createGameButton = document.getElementById("createGame");
 const joinGameButton = document.getElementById("joinGame");
 const ctx = game.getContext("2d");
-
+const statusMessage = document.getElementById("status");
 const numberOfColumns = 7;
 const numberOfRows = 6;
-
 const cellWidth = game.width / numberOfColumns;
 const cellHeight = game.height / numberOfRows;
-
+let clientPlayer = null;
+let clientGameId = null; //will be set when the game is created or joined
 const holeRadius = cellHeight / 2 - 5;
 //will have to change this so the player can choose the color of their peice and the opponent gets the other color
 let playerColor = "#FF0000"; //red
@@ -37,6 +37,7 @@ joinGameButton.addEventListener("click", joinGame);
 
 
 drawBoard();
+
 function drawBoard() { //draws an empty game board
   ctx.fillStyle = "#ADD8E6";
   ctx.fillRect(0, 0, game.width, game.height);
@@ -58,7 +59,7 @@ function drawBoard() { //draws an empty game board
   }
 }
 
-function createGame(){   //creates a new game
+async function createGame(){   //creates a new game
   //creates a new game object with player 1 name from input fields
   //sends the game object to the server
   const player1Name = document.getElementById("playerName").value;
@@ -80,17 +81,83 @@ function createGame(){   //creates a new game
   const currentPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
   const gameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
+  console.log("Game ID:", gameObj.gameId);
+  drawUpdate(gameObj); //draw the initial game state
+  try {const res = await fetch('/create-game', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+        gameId: gameObj.gameId,
+        player1Name: gameObj.player1Name,
+        player2Name: gameObj.player2Name,
+        currentPlayer: gameObj.currentPlayer,
+        gameState: gameObj.gameState,
+        gameCondition: gameObj.gameCondition
+    })
+  });
+  if(res.ok) {
+    console.log("Game created successfully");
+  }
+  } catch(error) {
+    console.error("Error creating game:", error);
+    errorMessage.textContent = "Error creating game. Please try again.";
+    return;
+  }
+  clientPlayer = 1;
+  clientGameId = gameObj.gameId; //set the client game id
   gameEventListener(gameObj);
 }
 
-function joinGame(){ //joins an existing game
+async function joinGame(){ //joins an existing game
   //reads the game id from input fields
   //send that number to server to join existing game
   //if the game exists, it will return the game object  
   //if not return an error message
-  console.log("Joining game...");
-  return; //this is a placeholder, will implement later
+  clientPlayer = 2;
+  const gameId = document.getElementById("gameId").value;
+  if (!gameId) {
+    console.log("Please enter a game ID");
+    errorMessage.textContent = "Please enter a game ID.";
+    return;
+  }
+  const player2Name = document.getElementById("playerName").value;
+  try {
+    const res = await fetch('/join-game', {
+      method: 'POST',
+      headers: {
+          'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+          gameId: gameId,
+          player2Name: player2Name
+      })
+    });
+    if (res.ok) {
+      const gameData = await res.json();
+      console.log("Game joined successfully", gameData);
+      const gameObj = new Game(
+        gameData.game.gameId,
+        gameData.game.player1Name,
+        gameData.game.player2Name,
+        gameData.game.currentPlayer,
+        gameData.game.gameState,
+        gameData.game.gameCondition
+      );
+      clientGameId = gameObj.gameId; //set the client game id
+      drawUpdate(gameObj); //draw the initial game state
+      statusMessage.textContent = `Joined game ${gameId} as ${player2Name}`;
+      gameEventListener(gameObj);
+    }
+  }catch(error) {
+    console.error("Error joining game:", error);
+    errorMessage.textContent = "Error joining game. Please try again.";
+    return;
+  }
+   pollGameState(gameId); // Start polling for game state updates
 } 
+
 function drawUpdate(gameObj){ //draws the game state
     for(let i = 0; i< gameObj.gameState.length; i++){
         for(let j = 0; j< gameObj.gameState[i].length; j++){
@@ -114,15 +181,17 @@ function drawUpdate(gameObj){ //draws the game state
         }
     }
 }
-function takeTurn(column ,  gameObj){ //takes the turn of the player, takes the column as input
-    //check if column is full
-    //places peice to the lowest available row
-    //check for win
-    //check for draw
-   //set turn to false for the next player
+
+async function takeTurn(column ,  gameObj){ //takes the turn of the player, takes the column as input
+  if (gameObj.currentPlayer !== clientPlayer) {
+      console.log("It's not your turn");
+      errorMessage.textContent = "It's not your turn.";
+      return;
+  }
       for(let i = gameObj.gameState[column].length; i >= 0 ; i--) {
           if(gameObj.gameState[column][i] == 0) {
-              gameObj.gameState[column][i] = 1; //1 for player 1
+              gameObj.gameState[column][i] = 1; 
+              gameObj.changePlayer(); 
               console.log(gameObj.gameState);
               drawUpdate(gameObj);
               if (gameObj.checkWin()) {
@@ -133,8 +202,67 @@ function takeTurn(column ,  gameObj){ //takes the turn of the player, takes the 
                   console.log("Game is a draw");
                   return;
               } 
-              //send gameState to server, or win/draw message
+              try{
+                const res = await fetch('/update-game', {
+                  method: 'POST',
+                  headers: {
+                      'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({
+                      gameId: gameObj.gameId,
+                      gameState: gameObj.gameState,
+                      currentPlayer: gameObj.currentPlayer,
+                      player1Name: gameObj.player1Name,
+                      player2Name: gameObj.player2Name,
+                      gameCondition: gameObj.gameCondition
+                  })
+                });
+                if (res.ok) {
+                  console.log("Game updated successfully");
+                }           
+              }catch(error) {
+                  console.error("Error updating game:", error);
+                  errorMessage.textContent = "Error updating game. Please try again.";
+              }
+              pollGameState(clientGameId); // Start polling for game state updates
               break;
           }
       }  
 }
+
+async function pollGameState(gameId) {
+  // Polls the server for the game state every 2 seconds
+  try {
+    const res = await fetch('/game-state', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body : JSON.stringify({ gameId: gameId })
+    });
+    if (res.ok) {
+      const gameData = await res.json();
+      const gameObj = new Game(
+        gameData.game.gameId,
+        gameData.game.player1Name,
+        gameData.game.player2Name,
+        gameData.game.currentPlayer,
+        gameData.game.gameState,
+        gameData.game.gameCondition
+      );
+      drawUpdate(gameObj);
+      if (gameObj.currentPlayer !== clientPlayer) {
+        statusMessage.textContent = `It's ${gameObj.currentPlayer === 1 ? gameObj.player1Name : gameObj.player2Name}'s turn`;
+      } else {
+        statusMessage.textContent = "It's your turn";
+        gameEventListener(gameObj); // Reattach the event listener for the current player
+        return; // Exit the loop if it's the current player's turn
+      }
+    } else {
+      console.error("Error fetching game state:", res.statusText);
+    }
+  } catch (error) {
+    console.error("Error polling game state:", error);
+  }
+  setTimeout(() => pollGameState(gameId), 2000); // Poll every 2 seconds
+} //polls the game state from the server

@@ -7,9 +7,22 @@
         {
             "type": "chrome",
             "request": "launch",
-            "name": "Launch Chrome against localhost",
+            "name": "lauch chrom browser",
             "url": "http://localhost:3000",
             "webRoot": "${workspaceFolder}"
+        }
+        ,
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Debug Server",
+            "skipFiles": ["<node_internals>/**"],
+            "program": "${workspaceFolder}/app.js",
+            "outFiles": [],
+            "resolveSourceMapLocations": [
+                "${workspaceFolder}/**",
+                "!**/node_modules/**"
+            ]
         }
     ]
 }

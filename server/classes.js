@@ -5,9 +5,9 @@ class Game {
         this.player1Name = player1Name;
         this.player2Name = player2Name;
         this.gameState = gameState;
-        this.currentPlayer = 1; // 1 for player1, 2 for player2
+        this.currentPlayer = currentPlayer; // 1 for player1, 2 for player2
         this.winner = null; // null if no winner yet
-        this.gameCondition = 'playing'; // 'playing', 'win', or 'draw'
+        this.gameCondition = gameCondition // 'playing', 'win', or 'draw'
     }
     resetGame(){
         this.gameState = [  [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
@@ -29,6 +29,13 @@ class Game {
         console.log("Checking for draw condition...");
         // Check if all cells are filled
         return false;
+    }
+    changePlayer(){
+        if(this.currentPlayer == 1){
+            this.currentPlayer = 2;
+        }else if(this.currentPlayer == 2){
+            this.currentPlayer = 1;
+        }; // Toggle between player 1 and player 2
     }
 
 }

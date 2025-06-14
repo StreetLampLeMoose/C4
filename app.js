@@ -7,6 +7,7 @@ const path = require('path');
 const { Game } = require('./server/classes.js');
 const routes = require('./server/routes.js');
 
+app.use(express.json());
 app.use(cors());
 app.use(express.static(path.join(__dirname, 'client')));
 
@@ -30,3 +31,5 @@ app.listen(port, () => {
 });
 
 app.use('/', routes);
+app.use(routes);
+
