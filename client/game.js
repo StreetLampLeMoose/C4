@@ -99,6 +99,7 @@ async function createGame(){   //creates a new game
   });
   if(res.ok) {
     console.log("Game created successfully");
+    statusMessage.textContent = `Game created with ID: ${gameObj.gameId}. Waiting for player 2 to join...`;
   }
   } catch(error) {
     console.error("Error creating game:", error);
@@ -190,7 +191,7 @@ async function takeTurn(column ,  gameObj){ //takes the turn of the player, take
   }
       for(let i = gameObj.gameState[column].length; i >= 0 ; i--) {
           if(gameObj.gameState[column][i] == 0) {
-              gameObj.gameState[column][i] = 1; 
+              gameObj.gameState[column][i] = clientPlayer; 
               gameObj.changePlayer(); 
               console.log(gameObj.gameState);
               drawUpdate(gameObj);
@@ -251,12 +252,12 @@ async function pollGameState(gameId) {
         gameData.game.gameCondition
       );
       drawUpdate(gameObj);
-      if (gameObj.currentPlayer !== clientPlayer) {
-        statusMessage.textContent = `It's ${gameObj.currentPlayer === 1 ? gameObj.player1Name : gameObj.player2Name}'s turn`;
+      if (gameObj.currentPlayer == clientPlayer) {
+        statusMessage.textContent = `It's your turn`;
+        gameEventListener(gameObj);
+        return;
       } else {
-        statusMessage.textContent = "It's your turn";
-        gameEventListener(gameObj); // Reattach the event listener for the current player
-        return; // Exit the loop if it's the current player's turn
+        statusMessage.textContent = `It's not your turn`;
       }
     } else {
       console.error("Error fetching game state:", res.statusText);
