@@ -7,7 +7,7 @@ class Game {
         this.gameState = gameState;
         this.currentPlayer = currentPlayer; // 1 for player1, 2 for player2
         this.winner = null; // null if no winner yet
-        this.gameCondition = gameCondition // 'playing', 'win', or 'draw'
+        this.gameCondition = gameCondition // 'waiting' ,'playing', 'win', 'draw'
     }
     resetGame(){
         this.gameState = [  [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns

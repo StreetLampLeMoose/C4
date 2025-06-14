@@ -1,3 +1,4 @@
+
 import Game from '/game-class';
 
 const game = document.getElementById("gameCanvas");
@@ -77,11 +78,10 @@ async function createGame(){   //creates a new game
                                 [0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0]
                           ];
-  const gameCondition = 'playing'; // 'playing', 'win', or 'draw'
+  const gameCondition = 'waiting'; // 'playing', 'win', or 'draw'
   const currentPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
   const gameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
-  console.log("Game ID:", gameObj.gameId);
   drawUpdate(gameObj); //draw the initial game state
   try {const res = await fetch('/create-game', {
     method: 'POST',
@@ -108,7 +108,10 @@ async function createGame(){   //creates a new game
   }
   clientPlayer = 1;
   clientGameId = gameObj.gameId; //set the client game id
+  createGameButton.disabled = true; //disable the create game button
+  joinGameButton.disabled = true; //disable the join game button
   gameEventListener(gameObj);
+  pollGameState(gameObj.gameId); // Start polling for game state updates
 }
 
 async function joinGame(){ //joins an existing game
@@ -135,8 +138,8 @@ async function joinGame(){ //joins an existing game
           player2Name: player2Name
       })
     });
+    const gameData = await res.json();
     if (res.ok) {
-      const gameData = await res.json();
       console.log("Game joined successfully", gameData);
       const gameObj = new Game(
         gameData.game.gameId,
@@ -150,12 +153,18 @@ async function joinGame(){ //joins an existing game
       drawUpdate(gameObj); //draw the initial game state
       statusMessage.textContent = `Joined game ${gameId} as ${player2Name}`;
       gameEventListener(gameObj);
+      
     }
+    if (!res.ok) {
+        errorMessage.textContent = gameData.error ;
+        throw new Error(gameData.error);
+      }
   }catch(error) {
     console.error("Error joining game:", error);
-    errorMessage.textContent = "Error joining game. Please try again.";
     return;
   }
+  createGameButton.disabled = true; //disable the create game button
+  joinGameButton.disabled = true; //disable the join game button
    pollGameState(gameId); // Start polling for game state updates
 } 
 
@@ -184,11 +193,6 @@ function drawUpdate(gameObj){ //draws the game state
 }
 
 async function takeTurn(column ,  gameObj){ //takes the turn of the player, takes the column as input
-  if (gameObj.currentPlayer !== clientPlayer) {
-      console.log("It's not your turn");
-      errorMessage.textContent = "It's not your turn.";
-      return;
-  }
       for(let i = gameObj.gameState[column].length; i >= 0 ; i--) {
           if(gameObj.gameState[column][i] == 0) {
               gameObj.gameState[column][i] = clientPlayer; 
@@ -252,16 +256,20 @@ async function pollGameState(gameId) {
         gameData.game.gameCondition
       );
       drawUpdate(gameObj);
-      if (gameObj.currentPlayer == clientPlayer) {
+      if (gameObj.currentPlayer == clientPlayer && gameObj.gameCondition == 'playing') {
         statusMessage.textContent = `It's your turn`;
         gameEventListener(gameObj);
         return;
-      } else {
+      } else if(gameObj.currentPlayer !== clientPlayer && gameObj.gameCondition == 'playing') {
         statusMessage.textContent = `It's not your turn`;
+      } else if (gameObj.gameCondition == 'waiting' && gameObj.clientPlayer == currentPlayer) {
+        statusMessage.textContent = "Take your turn and wait for another player to join...";
+        gameEventListener(gameObj);
+        return;
+      }else if (gameObj.gameCondition !== 'waiting' && gameObj.clientPlayer !== currentPlayer) {
+        statusMessage.textContent = `Waiting for other player to join...`;
       }
-    } else {
-      console.error("Error fetching game state:", res.statusText);
-    }
+    } 
   } catch (error) {
     console.error("Error polling game state:", error);
   }

@@ -36,15 +36,17 @@ router.post('/join-game', (req, res) => {
         return res.status(404).json({ error: 'Game not found' });
     }
     const game = games[gameId];
-    if (game.player2Name) {
+    if (game.player2Name !== '') {
         return res.status(400).json({ error: 'Game already has two players' });
     }
-    game.player2Name = player2Name; // Reset current player to player1
+    game.gameCondition = 'playing'; 
+    game.player2Name = player2Name;
+    games[gameId] = game; //update the game in the games object
     res.json({ game });
 })
 
 router.post('/game-state' , (req, res) => {
-    const {gameId} = req.body//route for sending game state
+    const {gameId} = req.body
     if (!gameId || !games[gameId]) {
         return res.status(404).json({ error: 'Game not found' });
     }
