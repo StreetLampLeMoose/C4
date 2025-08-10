@@ -23,7 +23,41 @@ class Game {
     }
     checkWin(){
         console.log("Checking for win condition...");
-        return false;
+        const cols = this.gameState.length;
+        const rows = this.gameState[0].length;
+        const directions = [
+            { x: 1, y: 0 },   // horizontal
+            { x: 0, y: 1 },   // vertical
+            { x: 1, y: 1 },   // diagonal down-right
+            { x: 1, y: -1 }   // diagonal up-right
+        ];
+
+        for (let col = 0; col < cols; col++) {
+            for (let row = 0; row < rows; row++) {
+                const player = this.gameState[col][row];
+                if (player === 0) continue;
+                for (const dir of directions) {
+                    let count = 1;
+                    let c = col + dir.x;
+                    let r = row + dir.y;
+                    while (
+                        c >= 0 && c < cols &&
+                        r >= 0 && r < rows &&
+                        this.gameState[c][r] === player
+                    ) {
+                        count++;
+                        if (count === 4) {
+                            this.winner = player;
+                            this.gameCondition = 'win';
+                            return player;
+                        }
+                        c += dir.x;
+                        r += dir.y;
+                    }
+                }
+            }
+        }
+        return null;
     }
     checkDraw(){
         console.log("Checking for draw condition...");

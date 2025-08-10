@@ -268,6 +268,9 @@ async function pollGameState(gameId) {
         return;
       }else if (gameObj.gameCondition !== 'waiting' && gameObj.clientPlayer !== currentPlayer) {
         statusMessage.textContent = `Waiting for other player to join...`;
+      }else if (gameObj.gameCondition == 'win') {
+        statusMessage.textContent = `Player ${gameObj.winner} wins!`;
+        game.removeEventListener("click", clickHandler); //remove the event listener after the game is over
       }
     } 
   } catch (error) {

@@ -26,6 +26,8 @@ router.post('/update-game', (req,res) => {
         return res.status(404).json({ error: 'Game not found' });
     }
     const game = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
+    game.checkWin(); // Check for a win condition
+    game.checkDraw(); // Check for a draw condition
     games[gameId] = game; // Update the game in the games object
     res.json({ message: 'Game updated successfully'});
 })
