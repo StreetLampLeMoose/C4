@@ -49,7 +49,7 @@ class Game {
                         if (count === 4) {
                             this.winner = player;
                             this.gameCondition = 'win';
-                            return player;
+                            return ;
                         }
                         c += dir.x;
                         r += dir.y;

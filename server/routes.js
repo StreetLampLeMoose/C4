@@ -38,7 +38,7 @@ router.post('/join-game', (req, res) => {
         return res.status(404).json({ error: 'Game not found' });
     }
     const game = games[gameId];
-    if (game.player2Name !== '') {
+    if (game.player2Name) {
         return res.status(400).json({ error: 'Game already has two players' });
     }
     game.gameCondition = 'playing'; 

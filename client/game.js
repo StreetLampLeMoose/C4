@@ -1,6 +1,6 @@
 
 import Game from '/game-class';
-
+let gameObj =null;
 const game = document.getElementById("gameCanvas");
 const errorMessage = document.getElementById("errorMessage");
 const createGameButton = document.getElementById("createGame");
@@ -17,19 +17,22 @@ const holeRadius = cellHeight / 2 - 5;
 //will have to change this so the player can choose the color of their peice and the opponent gets the other color
 let playerColor = "#FF0000"; //red
 let opponentColor = "#FFFF00"; //yellow
-
+let clickHandler = null;
 //will have to change this so one player is player 1 and the other is player 2
 //this will come from a route served by the server
 
-function gameEventListener(gameObj){
-   function clickHandler(event){ //handles the click event on the game canvas
-    console.log("Clicked");
-    const rect = game.getBoundingClientRect();
-    const x = event.clientX - rect.left;
-    const column = Math.floor(x / cellWidth);
-    takeTurn(column, gameObj);
-    game.removeEventListener("click", clickHandler); //remove the event listener after the first click
-  }
+clickHandler = function(event) {
+  console.log("Clicked");
+  const rect = game.getBoundingClientRect();
+  const x = event.clientX - rect.left;
+  const column = Math.floor(x / cellWidth);
+  takeTurn(column, gameObj);
+  game.removeEventListener("click", clickHandler);
+  clickHandler = null;
+};
+
+function gameEventListener(){
+  game.removeEventListener("click", clickHandler)
   game.addEventListener("click", clickHandler); //add event listener to the game canvas
 }
 
@@ -76,12 +79,12 @@ async function createGame(){   //creates a new game
                                 [0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 0, 0]
+                                [0, 0, 0, 1, 1, 1]
                           ];
   const gameCondition = 'waiting'; // 'playing', 'win', or 'draw'
   const currentPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
-  const gameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
+  gameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
   drawUpdate(gameObj); //draw the initial game state
   try {const res = await fetch('/create-game', {
     method: 'POST',
@@ -110,8 +113,8 @@ async function createGame(){   //creates a new game
   clientGameId = gameObj.gameId; //set the client game id
   createGameButton.disabled = true; //disable the create game button
   joinGameButton.disabled = true; //disable the join game button
-  gameEventListener(gameObj);
-  pollGameState(gameObj.gameId); // Start polling for game state updates
+  gameEventListener();
+  pollGameState(clientGameId); // Start polling for game state updates
 }
 
 async function joinGame(){ //joins an existing game
@@ -141,7 +144,7 @@ async function joinGame(){ //joins an existing game
     const gameData = await res.json();
     if (res.ok) {
       console.log("Game joined successfully", gameData);
-      const gameObj = new Game(
+        gameObj = new Game(
         gameData.game.gameId,
         gameData.game.player1Name,
         gameData.game.player2Name,
@@ -152,7 +155,7 @@ async function joinGame(){ //joins an existing game
       clientGameId = gameObj.gameId; //set the client game id
       drawUpdate(gameObj); //draw the initial game state
       statusMessage.textContent = `Joined game ${gameId} as ${player2Name}`;
-      gameEventListener(gameObj);
+      gameEventListener();
       
     }
     if (!res.ok) {
@@ -165,7 +168,7 @@ async function joinGame(){ //joins an existing game
   }
   createGameButton.disabled = true; //disable the create game button
   joinGameButton.disabled = true; //disable the join game button
-   pollGameState(gameId); // Start polling for game state updates
+  pollGameState(gameId); // Start polling for game state updates
 } 
 
 function drawUpdate(gameObj){ //draws the game state
@@ -199,14 +202,6 @@ async function takeTurn(column ,  gameObj){ //takes the turn of the player, take
               gameObj.changePlayer(); 
               console.log(gameObj.gameState);
               drawUpdate(gameObj);
-              if (gameObj.checkWin()) {
-                  console.log("current player wins");
-                  return;
-              }
-              if (gameObj.checkDraw()) {
-                  console.log("Game is a draw");
-                  return;
-              } 
               try{
                 const res = await fetch('/update-game', {
                   method: 'POST',
@@ -229,6 +224,7 @@ async function takeTurn(column ,  gameObj){ //takes the turn of the player, take
                   console.error("Error updating game:", error);
                   errorMessage.textContent = "Error updating game. Please try again.";
               }
+              console.log(gameObj);
               pollGameState(clientGameId); // Start polling for game state updates
               break;
           }
@@ -247,7 +243,7 @@ async function pollGameState(gameId) {
     });
     if (res.ok) {
       const gameData = await res.json();
-      const gameObj = new Game(
+        gameObj = new Game(
         gameData.game.gameId,
         gameData.game.player1Name,
         gameData.game.player2Name,
@@ -258,15 +254,14 @@ async function pollGameState(gameId) {
       drawUpdate(gameObj);
       if (gameObj.currentPlayer == clientPlayer && gameObj.gameCondition == 'playing') {
         statusMessage.textContent = `It's your turn`;
-        gameEventListener(gameObj);
+        gameEventListener();
         return;
       } else if(gameObj.currentPlayer !== clientPlayer && gameObj.gameCondition == 'playing') {
         statusMessage.textContent = `It's not your turn`;
-      } else if (gameObj.gameCondition == 'waiting' && gameObj.clientPlayer == currentPlayer) {
-        statusMessage.textContent = "Take your turn and wait for another player to join...";
-        gameEventListener(gameObj);
-        return;
-      }else if (gameObj.gameCondition !== 'waiting' && gameObj.clientPlayer !== currentPlayer) {
+      } else if (gameObj.gameCondition == 'waiting' && gameObj.currentPlayer == clientPlayer) {
+        statusMessage.textContent = `Game created with ID: ${gameObj.gameId}. Waiting for player 2 to join...`;
+        gameEventListener();
+      }else if (gameObj.gameCondition !== 'waiting' && gameObj.currentPlayer !== clientPlayer) {
         statusMessage.textContent = `Waiting for other player to join...`;
       }else if (gameObj.gameCondition == 'win') {
         statusMessage.textContent = `Player ${gameObj.winner} wins!`;
@@ -276,5 +271,7 @@ async function pollGameState(gameId) {
   } catch (error) {
     console.error("Error polling game state:", error);
   }
+  console.log("Polling game state...");
+  console.log(gameObj);
   setTimeout(() => pollGameState(gameId), 2000); // Poll every 2 seconds
 } //polls the game state from the server
