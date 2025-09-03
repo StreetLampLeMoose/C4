@@ -78,6 +78,7 @@ function drawBoard() { //draws an empty game board
 async function createGame(){   //creates a new game
   //creates a new game object with player 1 name from input fields
   //sends the game object to the server
+  errorMessage.textContent = "";
   const player1Name = document.getElementById("playerName").value;
   if (!player1Name) {
     console.log("Please enter a player name");
@@ -137,6 +138,7 @@ async function joinGame(){ //joins an existing game
   //send that number to server to join existing game
   //if the game exists, it will return the game object  
   //if not return an error message
+  errorMessage.textContent = "";
   clientPlayer = 2;
   const gameId = document.getElementById("gameId").value;
   if (!gameId) {
@@ -145,6 +147,11 @@ async function joinGame(){ //joins an existing game
     return;
   }
   const player2Name = document.getElementById("playerName").value;
+  if (!player2Name) {
+    console.log("Please enter a player name");
+    errorMessage.textContent = "Please enter a player name.";
+    return;
+  }
   try {
     const res = await fetch('/join-game', {
       method: 'POST',
