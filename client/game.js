@@ -28,10 +28,20 @@ clickHandler = function(event) {
   const rect = game.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const column = Math.floor(x / cellWidth);
+  if (isColumnFull(column)) {
+    console.log("Column is full");
+    errorMessage.textContent = "Column is full. Please choose another column.";
+    return;
+  }
+  errorMessage.textContent = "";
   takeTurn(column, currentGameObj);
   game.removeEventListener("click", clickHandler);
   //clickHandler = null;
 };
+
+function isColumnFull(column) { //checks if a column is full
+  return currentGameObj.gameState[column][0] !== 0;
+}
 
 function gameEventListener(){
   game.removeEventListener("click", clickHandler)
