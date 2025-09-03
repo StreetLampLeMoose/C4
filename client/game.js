@@ -7,6 +7,8 @@ const createGameButton = document.getElementById("createGame");
 const joinGameButton = document.getElementById("joinGame");
 const ctx = game.getContext("2d");
 const statusMessage = document.getElementById("status");
+const gameIdDisplay = document.getElementById("gameIdDisplay");
+const playerDisplay = document.getElementById("playerDisplay");
 const numberOfColumns = 7;
 const numberOfRows = 6;
 const cellWidth = game.width / numberOfColumns;
@@ -73,13 +75,13 @@ async function createGame(){   //creates a new game
     return;
   }
   const gameId = Math.floor(Math.random() * 10000); //generate a random game id
-  let  gameState =           [  [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
-                                [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 0, 0, 0]
+  let  gameState =       [  [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
+                            [0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0],
+                            [0, 0, 0, 0, 0, 0]
                           ];
   const gameCondition = 'waiting'; // 'playing', 'win', or 'draw'
   const currentPlayer = 1;
@@ -104,6 +106,8 @@ async function createGame(){   //creates a new game
   if(res.ok) {
     console.log("Game created successfully");
     statusMessage.textContent = `Game created with ID: ${currentGameObj.gameId}. Waiting for player 2 to join...`;
+    gameIdDisplay.textContent = `Game ID: ${currentGameObj.gameId}`;
+    playerDisplay.textContent = `You are Player ${clientPlayer} (red)`;
   }
   } catch(error) {
     console.error("Error creating game:", error);
@@ -156,6 +160,8 @@ async function joinGame(){ //joins an existing game
       clientGameId = currentGameObj.gameId; //set the client game id
       drawUpdate(currentGameObj); //draw the initial game state
       statusMessage.textContent = `Joined game ${gameId} as ${player2Name}`;
+      gameIdDisplay.textContent = `Game ID: ${currentGameObj.gameId}`;
+      playerDisplay.textContent = `You are Player ${clientPlayer} (yellow)`;
       gameEventListener();
       
     }
@@ -272,6 +278,8 @@ async function pollGameState() {
             statusMessage.textContent = `You lose! ${currentGameObj.player2Name} wins!`;
         }
       }
+    }else if(currentGameObj.gameCondition == 'draw'){
+        statusMessage.textContent = `It's a draw!`;
     }
   }
  }catch (error) {

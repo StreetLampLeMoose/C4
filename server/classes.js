@@ -57,13 +57,18 @@ class Game {
                 }
             }
         }
-        return null;
+        return;
     }
+    
     checkDraw(){
         console.log("Checking for draw condition...");
-        // Check if all cells are filled
-        return false;
+        const isDraw = this.gameState.every(column => column.every(cell => cell !== 0));
+        if (isDraw && this.winner === null) {
+            this.gameCondition = 'draw';
+        }
+        return;
     }
+
     changePlayer(){
         if(this.currentPlayer == 1){
             this.currentPlayer = 2;
