@@ -28,7 +28,7 @@ clickHandler = function(event) {
   const column = Math.floor(x / cellWidth);
   takeTurn(column, currentGameObj);
   game.removeEventListener("click", clickHandler);
-  clickHandler = null;
+  //clickHandler = null;
 };
 
 function gameEventListener(){
@@ -79,10 +79,11 @@ async function createGame(){   //creates a new game
                                 [0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0],
                                 [0, 0, 0, 0, 0, 0],
-                                [0, 0, 0, 1, 1, 1]
+                                [0, 0, 0, 0, 0, 0]
                           ];
   const gameCondition = 'waiting'; // 'playing', 'win', or 'draw'
-  const currentPlayer = 1; // 1 for player1, 2 for player2
+  const currentPlayer = 1;
+  clientPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
   currentGameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
   drawUpdate(currentGameObj); //draw the initial game state
@@ -250,26 +251,33 @@ async function pollGameState() {
       currentGameObj.gameState = gameData.game.gameState;
       currentGameObj.winner = gameData.game.winner; 
       drawUpdate(currentGameObj);
-      if (currentGameObj.currentPlayer == clientPlayer && currentGameObj.gameCondition == 'playing') {
-        statusMessage.textContent = `It's your turn`;
-        gameEventListener();
-        return;
-      } else if(currentGameObj.currentPlayer !== clientPlayer && currentGameObj.gameCondition == 'playing') {
-          statusMessage.textContent = `It's not your turn`;
-      } else if (currentGameObj.gameCondition == 'waiting' && currentGameObj.currentPlayer == clientPlayer) {
-          statusMessage.textContent = `Game created with ID: ${currentGameObj.gameId}. Waiting for player 2 to join...`;
+      if(currentGameObj.gameCondition == 'waiting'){
+        statusMessage.textContent = `Game created with ID: ${currentGameObj.gameId}. Waiting for player 2 to join...`;
+      }else if(currentGameObj.gameCondition == 'playing'){
+        if (currentGameObj.currentPlayer == clientPlayer) {
+          statusMessage.textContent = `It's your turn`;
           gameEventListener();
-      }else if (currentGameObj.gameCondition !== 'waiting' && currentGameObj.currentPlayer !== clientPlayer) {
-          statusMessage.textContent = `Waiting for other player to join...`;
-      }else if (currentGameObj.gameCondition == 'win') {
-          statusMessage.textContent = `Player ${currentGameObj.winner} wins!`;
-          game.removeEventListener("click", clickHandler); //remove the event listener after the game is over
+          return;
+        } else {
+          statusMessage.textContent = `It's not your turn`;
+        }
+      }else if(currentGameObj.gameCondition == 'win'){
+        if(currentGameObj.winner == clientPlayer){
+            statusMessage.textContent = `You win!`;
+        }
+        if (currentGameObj.winner != clientPlayer){
+          if(currentGameObj.winner == 1){
+            statusMessage.textContent = `You lose! ${currentGameObj.player1Name} wins!`;
+        }else if(currentGameObj.winner == 2){
+            statusMessage.textContent = `You lose! ${currentGameObj.player2Name} wins!`;
+        }
       }
-    } 
-  } catch (error) {
+    }
+  }
+ }catch (error) {
     console.error("Error polling game state:", error);
   }
   console.log("Polling game state...");
   console.log(currentGameObj);
-  setTimeout(() => pollGameState(clientGameId), 2000); // Poll every 2 seconds
+  setTimeout(() => pollGameState(), 2000); // Poll every 2 seconds
 } //polls the game state from the server
