@@ -1,6 +1,6 @@
 
 import Game from '/game-class';
-let gameObj =null;
+let currentGameObj = null;
 const game = document.getElementById("gameCanvas");
 const errorMessage = document.getElementById("errorMessage");
 const createGameButton = document.getElementById("createGame");
@@ -26,7 +26,7 @@ clickHandler = function(event) {
   const rect = game.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const column = Math.floor(x / cellWidth);
-  takeTurn(column, gameObj);
+  takeTurn(column, currentGameObj);
   game.removeEventListener("click", clickHandler);
   clickHandler = null;
 };
@@ -84,25 +84,25 @@ async function createGame(){   //creates a new game
   const gameCondition = 'waiting'; // 'playing', 'win', or 'draw'
   const currentPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
-  gameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
-  drawUpdate(gameObj); //draw the initial game state
+  currentGameObj = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
+  drawUpdate(currentGameObj); //draw the initial game state
   try {const res = await fetch('/create-game', {
     method: 'POST',
     headers: {
         'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-        gameId: gameObj.gameId,
-        player1Name: gameObj.player1Name,
-        player2Name: gameObj.player2Name,
-        currentPlayer: gameObj.currentPlayer,
-        gameState: gameObj.gameState,
-        gameCondition: gameObj.gameCondition
+        gameId: currentGameObj.gameId,
+        player1Name: currentGameObj.player1Name,
+        player2Name: currentGameObj.player2Name,
+        currentPlayer: currentGameObj.currentPlayer,
+        gameState: currentGameObj.gameState,
+        gameCondition: currentGameObj.gameCondition
     })
   });
   if(res.ok) {
     console.log("Game created successfully");
-    statusMessage.textContent = `Game created with ID: ${gameObj.gameId}. Waiting for player 2 to join...`;
+    statusMessage.textContent = `Game created with ID: ${currentGameObj.gameId}. Waiting for player 2 to join...`;
   }
   } catch(error) {
     console.error("Error creating game:", error);
@@ -110,11 +110,11 @@ async function createGame(){   //creates a new game
     return;
   }
   clientPlayer = 1;
-  clientGameId = gameObj.gameId; //set the client game id
+  clientGameId = currentGameObj.gameId; //set the client game id
   createGameButton.disabled = true; //disable the create game button
   joinGameButton.disabled = true; //disable the join game button
   gameEventListener();
-  pollGameState(clientGameId); // Start polling for game state updates
+  pollGameState(); // Start polling for game state updates
 }
 
 async function joinGame(){ //joins an existing game
@@ -144,7 +144,7 @@ async function joinGame(){ //joins an existing game
     const gameData = await res.json();
     if (res.ok) {
       console.log("Game joined successfully", gameData);
-        gameObj = new Game(
+        currentGameObj = new Game(
         gameData.game.gameId,
         gameData.game.player1Name,
         gameData.game.player2Name,
@@ -152,8 +152,8 @@ async function joinGame(){ //joins an existing game
         gameData.game.gameState,
         gameData.game.gameCondition
       );
-      clientGameId = gameObj.gameId; //set the client game id
-      drawUpdate(gameObj); //draw the initial game state
+      clientGameId = currentGameObj.gameId; //set the client game id
+      drawUpdate(currentGameObj); //draw the initial game state
       statusMessage.textContent = `Joined game ${gameId} as ${player2Name}`;
       gameEventListener();
       
@@ -168,12 +168,12 @@ async function joinGame(){ //joins an existing game
   }
   createGameButton.disabled = true; //disable the create game button
   joinGameButton.disabled = true; //disable the join game button
-  pollGameState(gameId); // Start polling for game state updates
+  pollGameState(); // Start polling for game state updates
 } 
 
-function drawUpdate(gameObj){ //draws the game state
-    for(let i = 0; i< gameObj.gameState.length; i++){
-        for(let j = 0; j< gameObj.gameState[i].length; j++){
+function drawUpdate(currentGameObj){ //draws the game state
+    for(let i = 0; i< currentGameObj.gameState.length; i++){
+        for(let j = 0; j< currentGameObj.gameState[i].length; j++){
             ctx.beginPath();
             ctx.arc(
                 i * cellWidth + cellWidth / 2,
@@ -182,9 +182,9 @@ function drawUpdate(gameObj){ //draws the game state
                 0,
                 Math.PI * 2
             );
-            if(gameObj.gameState[i][j] == 1){
+            if(currentGameObj.gameState[i][j] == 1){
                 ctx.fillStyle = playerColor;
-            }else if(gameObj.gameState[i][j] == 2){
+            }else if(currentGameObj.gameState[i][j] == 2){
                 ctx.fillStyle = opponentColor;
             }else{
                 ctx.fillStyle = "#fff";
@@ -195,13 +195,13 @@ function drawUpdate(gameObj){ //draws the game state
     }
 }
 
-async function takeTurn(column ,  gameObj){ //takes the turn of the player, takes the column as input
-      for(let i = gameObj.gameState[column].length; i >= 0 ; i--) {
-          if(gameObj.gameState[column][i] == 0) {
-              gameObj.gameState[column][i] = clientPlayer; 
-              gameObj.changePlayer(); 
-              console.log(gameObj.gameState);
-              drawUpdate(gameObj);
+async function takeTurn(column ,  currentGameObj){ //takes the turn of the player, takes the column as input
+      for(let i = currentGameObj.gameState[column].length; i >= 0 ; i--) {
+          if(currentGameObj.gameState[column][i] == 0) {
+              currentGameObj.gameState[column][i] = clientPlayer; 
+              currentGameObj.changePlayer(); 
+              console.log(currentGameObj.gameState);
+              drawUpdate(currentGameObj);
               try{
                 const res = await fetch('/update-game', {
                   method: 'POST',
@@ -209,12 +209,12 @@ async function takeTurn(column ,  gameObj){ //takes the turn of the player, take
                       'Content-Type': 'application/json'
                   },
                   body: JSON.stringify({
-                      gameId: gameObj.gameId,
-                      gameState: gameObj.gameState,
-                      currentPlayer: gameObj.currentPlayer,
-                      player1Name: gameObj.player1Name,
-                      player2Name: gameObj.player2Name,
-                      gameCondition: gameObj.gameCondition
+                      gameId: currentGameObj.gameId,
+                      gameState: currentGameObj.gameState,
+                      currentPlayer: currentGameObj.currentPlayer,
+                      player1Name: currentGameObj.player1Name,
+                      player2Name: currentGameObj.player2Name,
+                      gameCondition: currentGameObj.gameCondition
                   })
                 });
                 if (res.ok) {
@@ -224,14 +224,14 @@ async function takeTurn(column ,  gameObj){ //takes the turn of the player, take
                   console.error("Error updating game:", error);
                   errorMessage.textContent = "Error updating game. Please try again.";
               }
-              console.log(gameObj);
-              pollGameState(clientGameId); // Start polling for game state updates
+              console.log(currentGameObj);
+              pollGameState(); // Start polling for game state updates
               break;
           }
       }  
 }
 
-async function pollGameState(gameId) {
+async function pollGameState() {
   // Polls the server for the game state every 2 seconds
   try {
     const res = await fetch('/game-state', {
@@ -239,39 +239,37 @@ async function pollGameState(gameId) {
       headers: {
         'Content-Type': 'application/json'
       },
-      body : JSON.stringify({ gameId: gameId })
+      body : JSON.stringify({ gameId: clientGameId })
     });
     if (res.ok) {
       const gameData = await res.json();
-        gameObj = new Game(
-        gameData.game.gameId,
-        gameData.game.player1Name,
-        gameData.game.player2Name,
-        gameData.game.currentPlayer,
-        gameData.game.gameState,
-        gameData.game.gameCondition
-      );
-      drawUpdate(gameObj);
-      if (gameObj.currentPlayer == clientPlayer && gameObj.gameCondition == 'playing') {
+      currentGameObj.player1Name = gameData.game.player1Name;
+      currentGameObj.player2Name = gameData.game.player2Name;
+      currentGameObj.currentPlayer = gameData.game.currentPlayer;
+      currentGameObj.gameCondition = gameData.game.gameCondition;
+      currentGameObj.gameState = gameData.game.gameState;
+      currentGameObj.winner = gameData.game.winner; 
+      drawUpdate(currentGameObj);
+      if (currentGameObj.currentPlayer == clientPlayer && currentGameObj.gameCondition == 'playing') {
         statusMessage.textContent = `It's your turn`;
         gameEventListener();
         return;
-      } else if(gameObj.currentPlayer !== clientPlayer && gameObj.gameCondition == 'playing') {
-        statusMessage.textContent = `It's not your turn`;
-      } else if (gameObj.gameCondition == 'waiting' && gameObj.currentPlayer == clientPlayer) {
-        statusMessage.textContent = `Game created with ID: ${gameObj.gameId}. Waiting for player 2 to join...`;
-        gameEventListener();
-      }else if (gameObj.gameCondition !== 'waiting' && gameObj.currentPlayer !== clientPlayer) {
-        statusMessage.textContent = `Waiting for other player to join...`;
-      }else if (gameObj.gameCondition == 'win') {
-        statusMessage.textContent = `Player ${gameObj.winner} wins!`;
-        game.removeEventListener("click", clickHandler); //remove the event listener after the game is over
+      } else if(currentGameObj.currentPlayer !== clientPlayer && currentGameObj.gameCondition == 'playing') {
+          statusMessage.textContent = `It's not your turn`;
+      } else if (currentGameObj.gameCondition == 'waiting' && currentGameObj.currentPlayer == clientPlayer) {
+          statusMessage.textContent = `Game created with ID: ${currentGameObj.gameId}. Waiting for player 2 to join...`;
+          gameEventListener();
+      }else if (currentGameObj.gameCondition !== 'waiting' && currentGameObj.currentPlayer !== clientPlayer) {
+          statusMessage.textContent = `Waiting for other player to join...`;
+      }else if (currentGameObj.gameCondition == 'win') {
+          statusMessage.textContent = `Player ${currentGameObj.winner} wins!`;
+          game.removeEventListener("click", clickHandler); //remove the event listener after the game is over
       }
     } 
   } catch (error) {
     console.error("Error polling game state:", error);
   }
   console.log("Polling game state...");
-  console.log(gameObj);
-  setTimeout(() => pollGameState(gameId), 2000); // Poll every 2 seconds
+  console.log(currentGameObj);
+  setTimeout(() => pollGameState(clientGameId), 2000); // Poll every 2 seconds
 } //polls the game state from the server

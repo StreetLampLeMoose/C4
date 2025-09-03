@@ -2,9 +2,6 @@ const express = require('express');
 const router = express.Router();
 const {Game}= require('./classes.js');
 const games = {};
-router.get('/game-state', (req, res) => {
-    res.json(gameState);
-})
 
 router.get('/game-class', (req, res) => {
     const gameClassString = Game.toString();
@@ -25,10 +22,12 @@ router.post('/update-game', (req,res) => {
     if (!gameId || !games[gameId]) {
         return res.status(404).json({ error: 'Game not found' });
     }
-    const game = new Game(gameId, player1Name, player2Name, currentPlayer, gameState, gameCondition);
+    const game = games[gameId];
+    game.currentPlayer = currentPlayer;
+    game.gameState = gameState;
+    game.gameCondition = gameCondition;
     game.checkWin(); // Check for a win condition
     game.checkDraw(); // Check for a draw condition
-    games[gameId] = game; // Update the game in the games object
     res.json({ message: 'Game updated successfully'});
 })
 
@@ -48,7 +47,7 @@ router.post('/join-game', (req, res) => {
 })
 
 router.post('/game-state' , (req, res) => {
-    const {gameId} = req.body
+    const {gameId} = req.body;
     if (!gameId || !games[gameId]) {
         return res.status(404).json({ error: 'Game not found' });
     }
