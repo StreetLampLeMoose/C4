@@ -18,14 +18,11 @@ const cellHeight = game.height / numberOfRows;
 let clientPlayer = null;
 let clientGameId = null; //will be set when the game is created or joined
 const holeRadius = cellHeight / 2 - 5;
-//will have to change this so the player can choose the color of their peice and the opponent gets the other color
 let playerColor = "#FF0000"; //red
 let opponentColor = "#FFFF00"; //yellow
 let clickHandler = null;
-//will have to change this so one player is player 1 and the other is player 2
-//this will come from a route served by the server
 
-clickHandler = function(event) {
+clickHandler = function(event) { //handles click events on the game canvas
   console.log("Clicked");
   const rect = game.getBoundingClientRect();
   const x = event.clientX - rect.left;
@@ -38,7 +35,6 @@ clickHandler = function(event) {
   errorMessage.textContent = "";
   takeTurn(column, currentGameObj);
   game.removeEventListener("click", clickHandler);
-  //clickHandler = null;
 };
 
 function isColumnFull(column) { //checks if a column is full
@@ -47,7 +43,7 @@ function isColumnFull(column) { //checks if a column is full
 
 function gameEventListener(){
   game.removeEventListener("click", clickHandler)
-  game.addEventListener("click", clickHandler); //add event listener to the game canvas
+  game.addEventListener("click", clickHandler); 
 }
 
 createGameButton.addEventListener("click", createGame);
@@ -128,8 +124,8 @@ async function createGame(){   //creates a new game
   }
   clientPlayer = 1;
   clientGameId = currentGameObj.gameId; //set the client game id
-  createGameButton.disabled = true; //disable the create game button
-  joinGameButton.disabled = true; //disable the join game button
+  createGameButton.disabled = true;
+  joinGameButton.disabled = true; 
   gameEventListener();
   pollGameState(); // Start polling for game state updates
 }
@@ -194,6 +190,7 @@ async function joinGame(){ //joins an existing game
   joinGameButton.disabled = true; //disable the join game button
   pollGameState(); // Start polling for game state updates
 } 
+
 async function resetGame(){ //resets the game to initial state
   if(!currentGameObj){
     errorMessage.textContent = "No game to reset. Please create or join a game.";
@@ -295,6 +292,7 @@ async function takeTurn(column ,  currentGameObj){ //takes the turn of the playe
 
 async function pollGameState() {
   // Polls the server for the game state every 2 seconds
+  // breaks polling loop if it is the client player's turn
   try {
     const res = await fetch('/game-state', {
       method: 'POST',
@@ -341,7 +339,6 @@ async function pollGameState() {
     console.error("Error polling game state:", error);
   }
   console.log("Polling game state...");
-  console.log(currentGameObj);
   setTimeout(() => pollGameState(), 2000); // Poll every 2 seconds
 }
 //polls the game state from the server
