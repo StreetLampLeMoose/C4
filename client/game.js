@@ -92,7 +92,7 @@ async function createGame(){   //creates a new game
                             [0, 0, 0, 0, 0, 0],
                             [0, 0, 0, 0, 0, 0]
                           ];
-  const gameCondition = 'waiting'; // 'playing', 'win', or 'draw'
+  const gameCondition = 'waiting'; //'waiting' , 'playing', 'win', or 'draw'
   const currentPlayer = 1;
   clientPlayer = 1; // 1 for player1, 2 for player2
   const player2Name = ''; //player 2 name will be set when the second player joins
