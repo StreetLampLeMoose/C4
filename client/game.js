@@ -5,10 +5,12 @@ const game = document.getElementById("gameCanvas");
 const errorMessage = document.getElementById("errorMessage");
 const createGameButton = document.getElementById("createGame");
 const joinGameButton = document.getElementById("joinGame");
+const resetGameButton = document.getElementById("resetGame");
 const ctx = game.getContext("2d");
 const statusMessage = document.getElementById("status");
 const gameIdDisplay = document.getElementById("gameIdDisplay");
-const playerDisplay = document.getElementById("playerDisplay");
+const player1Display = document.getElementById("player1Display");
+const player2Display = document.getElementById("player2Display");
 const numberOfColumns = 7;
 const numberOfRows = 6;
 const cellWidth = game.width / numberOfColumns;
@@ -50,7 +52,7 @@ function gameEventListener(){
 
 createGameButton.addEventListener("click", createGame);
 joinGameButton.addEventListener("click", joinGame);
-
+resetGameButton.addEventListener("click", resetGame);
 
 drawBoard();
 
@@ -118,7 +120,6 @@ async function createGame(){   //creates a new game
     console.log("Game created successfully");
     statusMessage.textContent = `Game created with ID: ${currentGameObj.gameId}. Waiting for player 2 to join...`;
     gameIdDisplay.textContent = `Game ID: ${currentGameObj.gameId}`;
-    playerDisplay.textContent = `You are Player ${clientPlayer} (red)`;
   }
   } catch(error) {
     console.error("Error creating game:", error);
@@ -178,7 +179,6 @@ async function joinGame(){ //joins an existing game
       drawUpdate(currentGameObj); //draw the initial game state
       statusMessage.textContent = `Joined game ${gameId} as ${player2Name}`;
       gameIdDisplay.textContent = `Game ID: ${currentGameObj.gameId}`;
-      playerDisplay.textContent = `You are Player ${clientPlayer} (yellow)`;
       gameEventListener();
       
     }
@@ -194,8 +194,46 @@ async function joinGame(){ //joins an existing game
   joinGameButton.disabled = true; //disable the join game button
   pollGameState(); // Start polling for game state updates
 } 
+async function resetGame(){ //resets the game to initial state
+  if(!currentGameObj){
+    errorMessage.textContent = "No game to reset. Please create or join a game.";
+    return;
+  }else if(currentGameObj.gameCondition != 'win' && currentGameObj.gameCondition != 'draw'){
+    errorMessage.textContent = "Game is still in progress. Cannot reset.";
+    return;
+  }else{
+    //reset the game state
+    try {
+      const res = await fetch('/reset-game', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+    },
+        body: JSON.stringify({gameId: clientGameId})
+    });
+      if (res.ok) {
+        const gameData = await res.json();  
+        currentGameObj.currentPlayer = gameData.game.currentPlayer;
+        currentGameObj.gameState = gameData.game.gameState;
+        currentGameObj.gameCondition = gameData.game.gameCondition;
+        currentGameObj.winner = gameData.game.winner;
+        drawUpdate(currentGameObj);
+        statusMessage.textContent = `Game reset. It's your turn`;
+        errorMessage.textContent = "";
+        gameEventListener();
+        pollGameState(); // Start polling for game state updates 
+      }
+    }catch(error) {
+      console.error("Error resetting game:", error);
+      errorMessage.textContent = "Error resetting game. Please try again.";
+      return;
+    }
+  }
+}
 
 function drawUpdate(currentGameObj){ //draws the game state
+  player1Display.textContent = `Player 1: ${currentGameObj.player1Name} (red)`;
+  player2Display.textContent = `Player 2: ${currentGameObj.player2Name} (yellow)`;
     for(let i = 0; i< currentGameObj.gameState.length; i++){
         for(let j = 0; j< currentGameObj.gameState[i].length; j++){
             ctx.beginPath();
@@ -305,4 +343,5 @@ async function pollGameState() {
   console.log("Polling game state...");
   console.log(currentGameObj);
   setTimeout(() => pollGameState(), 2000); // Poll every 2 seconds
-} //polls the game state from the server
+}
+//polls the game state from the server

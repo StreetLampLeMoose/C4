@@ -20,6 +20,7 @@ class Game {
                           ];
         this.currentPlayer =1;
         this.winner = null;
+        this.gameCondition = 'playing';
     }
     checkWin(){
         console.log("Checking for win condition...");

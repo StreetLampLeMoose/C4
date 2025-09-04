@@ -46,6 +46,17 @@ router.post('/join-game', (req, res) => {
     res.json({ game });
 })
 
+router.post('/reset-game', (req, res) => {
+    const { gameId } = req.body; 
+    if (!gameId || !games[gameId]) {   
+        return res.status(404).json({ error: 'Game not found' });
+    }
+    const game = games[gameId];
+    game.resetGame();
+    res.json({ message: 'Game reset successfully', game });
+
+})
+
 router.post('/game-state' , (req, res) => {
     const {gameId} = req.body;
     if (!gameId || !games[gameId]) {
