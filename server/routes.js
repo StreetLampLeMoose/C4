@@ -31,7 +31,9 @@ router.post('/update-game', (req,res) => {
     res.json({ message: 'Game updated successfully'});
 })
 
-router.post('/join-game', (req, res) => {
+router.post('/join-game', (req, res) => { 
+    // route for joining a game
+    // allows joining if game exists and only has one player
     const { gameId, player2Name } = req.body;
     if (!gameId || !games[gameId]) {
         return res.status(404).json({ error: 'Game not found' });
@@ -47,6 +49,8 @@ router.post('/join-game', (req, res) => {
 })
 
 router.post('/reset-game', (req, res) => {
+    // resets the game to initial state
+    // keeps player names and gameId the same
     const { gameId } = req.body; 
     if (!gameId || !games[gameId]) {   
         return res.status(404).json({ error: 'Game not found' });
@@ -58,6 +62,7 @@ router.post('/reset-game', (req, res) => {
 })
 
 router.post('/game-state' , (req, res) => {
+    // returns the game state for a given gameId
     const {gameId} = req.body;
     if (!gameId || !games[gameId]) {
         return res.status(404).json({ error: 'Game not found' });

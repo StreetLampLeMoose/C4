@@ -23,7 +23,6 @@ app.get('/', (req, res) => {
 app.get('/view', (req, res) => {
   console.log('Received request for /view');
   res.sendFile(path.join(__dirname , '/client/view.html'));
-  //res.sendFile(path.join(__dirname , '/client/game.js'));
 });
  
 app.listen(port, () => {

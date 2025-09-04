@@ -1,5 +1,5 @@
 class Game {
-    constructor(gameId, player1Name, player2Name, currentPlayer,gameState, gameCondition)  //gameCondition can be playing, win, draw
+    constructor(gameId, player1Name, player2Name, currentPlayer,gameState, gameCondition)  
     {
         this.gameId = gameId;
         this.player1Name = player1Name;
@@ -9,6 +9,7 @@ class Game {
         this.winner = null; // null if no winner yet
         this.gameCondition = gameCondition // 'waiting' ,'playing', 'win', 'draw'
     }
+
     resetGame(){
         this.gameState = [  [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
                             [0, 0, 0, 0, 0, 0],
@@ -22,6 +23,7 @@ class Game {
         this.winner = null;
         this.gameCondition = 'playing';
     }
+
     checkWin(){
         console.log("Checking for win condition...");
         const cols = this.gameState.length;
@@ -61,7 +63,7 @@ class Game {
         return;
     }
     
-    checkDraw(){
+    checkDraw(){ //checks if all columns are full and there is no winner
         console.log("Checking for draw condition...");
         const isDraw = this.gameState.every(column => column.every(cell => cell !== 0));
         if (isDraw && this.winner === null) {
@@ -70,15 +72,14 @@ class Game {
         return;
     }
 
-    changePlayer(){
+    changePlayer(){ // Toggle between player 1 and player 2
         if(this.currentPlayer == 1){
             this.currentPlayer = 2;
         }else if(this.currentPlayer == 2){
             this.currentPlayer = 1;
-        }; // Toggle between player 1 and player 2
+        }; 
     }
 
 }
 
 module.exports = { Game };
-// This code defines a Game class for a Connect Four game. 
