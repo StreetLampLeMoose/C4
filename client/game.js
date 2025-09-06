@@ -83,6 +83,21 @@ async function createGame(){   //creates a new game
     errorMessage.textContent = "Please enter a player name.";
     return;
   }
+
+  if(currentGameObj){
+    try{
+      const res = await fetch('/delete-game', {
+        method: 'POST',
+        headers: { 
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({gameId: clientGameId})
+         })
+    }catch(error){
+      console.error("Error deleting existing game:", error);
+    }
+  }
+
   const gameId = Math.floor(Math.random() * 10000); //generate a random game id
   let  gameState =       [  [0, 0, 0, 0, 0, 0], //empty game state sub arrays are columns
                             [0, 0, 0, 0, 0, 0],
@@ -330,11 +345,20 @@ async function pollGameState() {
         }else if(currentGameObj.winner == 2){
             statusMessage.textContent = `You lose! ${currentGameObj.player2Name} wins!`;
         }
+        
       }
+      createGameButton.disabled = false; //enable the create game button
+      joinGameButton.disabled = false;
     }else if(currentGameObj.gameCondition == 'draw'){
         statusMessage.textContent = `It's a draw!`;
-    }
+        createGameButton.disabled = false; //enable the create game button
+        joinGameButton.disabled = false;
+    }else if (currentGameObj.gameCondition == 'ended'){
+        statusMessage.textContent = `Game has ended. Please create or join a new game.`;
+        createGameButton.disabled = false; //enable the create game button
+        joinGameButton.disabled = false; //enable the join game button
   }
+}
  }catch (error) {
     console.error("Error polling game state:", error);
   }

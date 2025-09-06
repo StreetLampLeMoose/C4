@@ -2,6 +2,16 @@ const express = require('express');
 const router = express.Router();
 const {Game}= require('./classes.js');
 const games = {};
+gameCleanup(); // Start the game cleanup process
+function gameCleanup() { //deltes games that have ended every 60 seconds
+    for (const gameId in games) {
+        if (games[gameId].gameCondition === 'ended') {
+            delete games[gameId];
+            console.log(`Cleaned up game with ID: ${gameId}`);
+        }
+    setTimeout(gameCleanup, 60000); // Run every 60 seconds    
+}
+}
 
 router.get('/game-class', (req, res) => {
     const gameClassString = Game.toString();
@@ -60,6 +70,15 @@ router.post('/reset-game', (req, res) => {
     res.json({ message: 'Game reset successfully', game });
 
 })
+
+router.post('/delete-game', (req, res) => {
+    const { gameId } = req.body;
+    if (!gameId || !games[gameId]) {
+        return res.status(404).json({ error: 'Game not found' });
+    }
+    games[gameId].gameCondition = 'ended'; //mark the game as ended
+    res.json({ message: 'Game deleted successfully' });
+});
 
 router.post('/game-state' , (req, res) => {
     // returns the game state for a given gameId
